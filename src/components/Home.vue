@@ -2,7 +2,7 @@
   <div class="hello">
     <h2>Les ZinZins (FireBase/FireStore)</h2>
     <!-- SEP -->
-    <div class="publish_party">
+    <form @submit.prevent="addTodo" class="publish_party">
       <input
         type="text"
         class="text_to_publish"
@@ -15,7 +15,7 @@
         class="publish_button"
         @click="addTodo"
       />
-    </div>
+    </form>
     <!-- SEP -->
     <div class="err">
       <div class="check"></div>
@@ -25,8 +25,13 @@
     <div class="list">
       <div class="item_in_list" v-for="todo in todoInDB" :key="todo._id">
         <input type="text" class="li" :value="todo.name" readonly />
-        <div class="del_option" @click="Delete(todo._id)">
-          <i class="fa-solid fa-trash"></i>
+        <div class="options">
+          <!-- <div class="edit_option" @click="editTodo(todo._id)">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div> -->
+          <div class="del_option" @click="Delete(todo._id)">
+            <i class="fa-solid fa-trash"></i>
+          </div>
         </div>
       </div>
     </div>
@@ -38,18 +43,19 @@ import { ref, onMounted } from "vue";
 import db from "../firebase/db";
 import {
   collection,
-  getDocs,
   addDoc,
   orderBy,
   query,
   doc,
   deleteDoc,
   onSnapshot,
+  updateDoc,
 } from "firebase/firestore";
 
 export default {
   setup() {
     const textToPub = ref(null);
+    const textToEdit = ref(null);
     const todoInDB = ref([]);
 
     // ADDING FUNCTION
@@ -62,6 +68,16 @@ export default {
       textToPub.value = "";
     };
 
+    // EDIT FUNCTION
+    const editTodo = async function (_id) {
+      const docInCollection = doc(db, "users", _id);
+
+      // Set the "capital" field of the city 'DC'
+      await updateDoc(docInCollection, {
+        name: "NV-TXT",
+      });
+    };
+
     // DELETE FUNCTION
     const Delete = async function (id) {
       await deleteDoc(doc(db, "users", id));
@@ -69,12 +85,12 @@ export default {
 
     //LECTURE FUNCTION
     onMounted(async function () {
-      const querySnapshot = await getDocs(collection(db, "users"));
+      //   const dataOnFireBase = await getDocs(collection(db, "users"));
       onSnapshot(
         query(collection(db, "users"), orderBy("_id")),
-        function (querySnapshot) {
+        function (dataOnFireBase) {
           const todoToPush = [];
-          querySnapshot.forEach(async function (doc) {
+          dataOnFireBase.forEach(async function (doc) {
             const todo = {
               _id: doc.id,
               name: doc.data().name,
@@ -88,8 +104,10 @@ export default {
 
     return {
       addTodo,
+      editTodo,
       Delete,
       textToPub,
+      textToEdit,
       todoInDB,
     };
   },
@@ -128,7 +146,7 @@ export default {
   width: 5rem;
   transition: 0.3s;
   cursor: pointer;
-  height: 3.1rem;
+  height: 3.2rem;
 }
 .publish_button:hover {
   background-color: #ffee57;
@@ -169,35 +187,46 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: #959da533 0px 8px 24px;
   height: 3rem;
-  border-radius: 0.5rem;
-  overflow: hidden;
   margin-bottom: 1rem;
 }
 .item_in_list .li {
   height: 100%;
   width: 20rem;
+  margin-right: 0.5rem;
   border: none;
+  border-radius: 3rem;
   text-align: center;
   list-style: none;
   background-color: white;
+  box-shadow: #959da533 0px 8px 24px;
 }
 .item_in_list .li:focus {
   outline: none;
 }
-
-.del_option {
+.options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   height: 100%;
+  width: 6.5rem;
+}
+
+.del_option,
+.edit_option {
+  height: 100%;
+  width: 3rem;
 }
 .item_in_list i {
-  width: 3rem;
+  width: 100%;
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: #959da533 0px 8px 24px;
 }
 .fa-pen-to-square {
   margin-right: 0.5rem;
